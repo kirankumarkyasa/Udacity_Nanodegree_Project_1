@@ -17,7 +17,7 @@ public interface MovieService {
     Call<MoviesResult> getPopularMovies(@Query("api_key") String apiKey);
 
     @GET("movie/{id}")
-    Call<Movie> getMovieDetails(@Path("id") int id);
+    Call<Movie> getMovieDetails(@Path("id") int id,@Query("api_key") String apiKey);
 
     @GET("movie/top_rated")
     Call<List<Movie>> getHighestRatedMovies(@Query("api_key") String apiKey);

@@ -41,10 +41,13 @@ public class MoviesListActivity extends AppCompatActivity {
                 mMoviesListRv.setLayoutManager(new GridLayoutManager(MoviesListActivity.this,2));
                 MoviesResult mr = response.body();
                 mMoviesList = (ArrayList<Movie>) mr.getResults();
-                mMoviesListRv.setAdapter(new MoviesListAdapter(MoviesListActivity.this, mMoviesList, new MoviesListAdapter.OnItemclickListener() {
+                mMoviesListRv.setAdapter(new MoviesListAdapter(MoviesListActivity.this,
+                        mMoviesList, new MoviesListAdapter.OnItemclickListener() {
                     @Override
                     public void onItemClick(int movieId) {
+
                         Intent i = new Intent(MoviesListActivity.this,MovieDetailActivity.class);
+                        i.putExtra("movie_id",movieId);
                         startActivity(i);
                     }
                 }));
