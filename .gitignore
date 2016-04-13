@@ -6,4 +6,4 @@
 .DS_Store
 /build
 /captures
-app/src/main/java/kyasa/com/popularmovies1/APIManager/RetroManager.java
+/app/src/main/java/kyasa/com/popularmovies1/APIManager/RetroManager.java
