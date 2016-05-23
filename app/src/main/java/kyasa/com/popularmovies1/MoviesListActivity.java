@@ -6,14 +6,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import kyasa.com.popularmovies1.APIManager.RetroManager;
 import kyasa.com.popularmovies1.Adapters.MoviesListAdapter;
@@ -33,11 +31,13 @@ public class MoviesListActivity extends AppCompatActivity {
     boolean isLoading;
     private int pageNumber=1;
     private GridLayoutManager gridLayoutManager;
-
+    private boolean isPopular = true;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movies_list);
+
+        getSupportActionBar().setTitle(R.string.popular_movies_title);
         mMoviesListRv = (RecyclerView) findViewById(R.id.movies_list_rv);
         mMoviesListRv.setVisibility(View.GONE);
         gridLayoutManager = new GridLayoutManager(MoviesListActivity.this,2);
@@ -59,6 +59,7 @@ public class MoviesListActivity extends AppCompatActivity {
                 }
             }
         });
+
         moviesListAdapter=new MoviesListAdapter(MoviesListActivity.this,
                 new MoviesListAdapter.OnItemclickListener() {
                     @Override
@@ -88,15 +89,20 @@ public class MoviesListActivity extends AppCompatActivity {
         }
     };
 
-    public void getMoviesData(int page){
+    public void getMoviesData(int page) {
+        String sort= "popular";
+        if(isPopular) {
+            sort= "popular";
+        } else {
+            sort = "top_rated";
+        }
         final Call<MoviesResult> moviesList =  new RetroManager().getRetrofit().create(MovieService.class)
-                .getPopularMovies(RetroManager.API_KEY,page);
+                .getMovies(sort,RetroManager.API_KEY,page);
         moviesList.enqueue(new Callback<MoviesResult>() {
             @Override
             public void onResponse(Call<MoviesResult> call, Response<MoviesResult> response) {
                 mMoviesListRv.setVisibility(View.VISIBLE);
                 MoviesResult mr = response.body();
-
                 if (mMoviesList.size() > 0) {
                     mMoviesList.remove(mMoviesList.size() - 1);
                     moviesListAdapter.notifyItemRemoved(mMoviesList.size());
@@ -114,7 +120,7 @@ public class MoviesListActivity extends AppCompatActivity {
         });
     }
 
-    private boolean isChecked = false;
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -124,22 +130,21 @@ public class MoviesListActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        MenuItem checkable = menu.findItem(R.id.sort_toggle);
-        checkable.setChecked(isChecked);
-        return true;
-    }
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.sort_toggle:
-                isChecked = !item.isChecked();
-                if(isChecked){
+                if(isPopular) {
                     item.setTitle(getString(R.string.sort_by_top_rated));
+                    getSupportActionBar().setTitle(R.string.top_rated_title);
+                    isPopular = false;
 
+                } else {
+                    item.setTitle(getString(R.string.sort_by_popular));
+                    getSupportActionBar().setTitle(R.string.popular_movies_title);
+                    isPopular = true;
                 }
-                item.setChecked(isChecked);
+                getMoviesData(1);
+                mMoviesList.clear();
                 return true;
             default:
                 return false;

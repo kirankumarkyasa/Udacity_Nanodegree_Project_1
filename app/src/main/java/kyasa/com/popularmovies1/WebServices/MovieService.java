@@ -13,8 +13,8 @@ import retrofit2.http.Query;
  * Created by kiran on 12/4/16.
  */
 public interface MovieService {
-    @GET("movie/popular")
-    Call<MoviesResult> getPopularMovies(@Query("api_key") String apiKey,@Query("page") int pageNumber);
+    @GET("movie/{sort}")
+    Call<MoviesResult> getMovies(@Path("sort") String sort,@Query("api_key") String apiKey, @Query("page") int pageNumber);
 
     @GET("movie/{id}")
     Call<Movie> getMovieDetails(@Path("id") int id,@Query("api_key") String apiKey);

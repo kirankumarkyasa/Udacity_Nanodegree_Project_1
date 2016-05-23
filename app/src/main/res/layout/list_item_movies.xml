@@ -3,13 +3,14 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
     android:background="@android:color/holo_blue_light">
 
     <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:id="@+id/movie_poster_iv"
-        android:scaleType="fitXY"
+        android:scaleType="fitCenter"
         android:src="@mipmap/ic_launcher"/>
 
     <TextView
@@ -17,8 +18,8 @@
         android:layout_height="wrap_content"
         android:id="@+id/movie_title_tv"
         android:text="movieName"
+        android:layout_alignParentBottom="true"
         android:textSize="18sp"
         android:textColor="@android:color/white"
-        android:layout_alignParentBottom="true"
         android:padding="10dp"/>
 </RelativeLayout>
