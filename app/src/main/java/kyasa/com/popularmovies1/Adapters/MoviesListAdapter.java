@@ -20,15 +20,23 @@ import kyasa.com.popularmovies1.R;
 /**
  * Created by kiran on 12/4/16.
  */
-public class MoviesListAdapter extends RecyclerView.Adapter<MoviesListAdapter.MovieItemViewHolder>{
+public class MoviesListAdapter extends RecyclerView.Adapter<MoviesListAdapter.MovieItemViewHolder> {
 
     Context mContext;
-    OnItemclickListener mListener;
 
+    public OnItemclickListener getmListener() {
+        return mListener;
+    }
+
+    public void setmListener(OnItemclickListener mListener) {
+        this.mListener = mListener;
+    }
+
+    OnItemclickListener mListener;
     ArrayList<Movie> mMoviesList;
-    public MoviesListAdapter(Context context, ArrayList<Movie> moviesList,OnItemclickListener listener) {
+
+    public MoviesListAdapter(Context context,OnItemclickListener listener) {
         mContext =context;
-        mMoviesList = moviesList;
         mListener = listener;
     }
 
@@ -52,7 +60,6 @@ public class MoviesListAdapter extends RecyclerView.Adapter<MoviesListAdapter.Mo
     }
 
     public class MovieItemViewHolder extends RecyclerView.ViewHolder {
-
         ImageView movie_poster_iv;
         TextView movie_title_tv;
         public MovieItemViewHolder(View itemView) {
@@ -62,32 +69,31 @@ public class MoviesListAdapter extends RecyclerView.Adapter<MoviesListAdapter.Mo
         }
 
         public void bind(final Movie item, final OnItemclickListener listener) {
-            final String image_base_url = "http://image.tmdb.org/t/p/w185"+item.getBackdropPath();
-            movie_title_tv.setText(item.getTitle());
-            Picasso.with(mContext).
-                    load(image_base_url)
-                    .into(movie_poster_iv, new Callback() {
-                        @Override
-                        public void onSuccess() {
-                            Log.e("Picasso","ImageLoaded");
-                        }
-
-                        @Override
-                        public void onError() {
-                            Log.e("PicassoError","ImageNOTLoaded");
-                            Log.e("PicassoError",image_base_url);
-                        }
-                    });
-            itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    listener.onItemClick(item.getId());
-                }
-            });
+            if(item != null){
+                final String image_base_url = "http://image.tmdb.org/t/p/w185"+item.getPosterPath();
+                movie_title_tv.setText(item.getTitle());
+                Picasso.with(mContext).
+                        load(image_base_url).resize(140,340)
+                        .into(movie_poster_iv);
+                itemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        listener.onItemClick(item.getId());
+                    }
+                });
+            }
         }
     }
 
-    public interface OnItemclickListener{
+    public interface OnItemclickListener {
         void onItemClick(int movieId);
+    }
+
+    public ArrayList<Movie> getmMoviesList() {
+        return mMoviesList;
+    }
+
+    public void setmMoviesList(ArrayList<Movie> mMoviesList) {
+        this.mMoviesList = mMoviesList;
     }
 }

@@ -1,11 +1,15 @@
 package kyasa.com.popularmovies1;
 
 import android.content.Intent;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 
 import java.util.ArrayList;
@@ -13,6 +17,7 @@ import java.util.List;
 
 import kyasa.com.popularmovies1.APIManager.RetroManager;
 import kyasa.com.popularmovies1.Adapters.MoviesListAdapter;
+import kyasa.com.popularmovies1.Interface.OnLoadMoreListener;
 import kyasa.com.popularmovies1.Model.Movie;
 import kyasa.com.popularmovies1.Model.MoviesResult;
 import kyasa.com.popularmovies1.WebServices.MovieService;
@@ -23,7 +28,11 @@ import retrofit2.Response;
 public class MoviesListActivity extends AppCompatActivity {
 
     RecyclerView mMoviesListRv;
-    ArrayList<Movie> mMoviesList;
+    ArrayList<Movie> mMoviesList = new ArrayList<>();
+    MoviesListAdapter moviesListAdapter;
+    boolean isLoading;
+    private int pageNumber=1;
+    private GridLayoutManager gridLayoutManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,26 +40,71 @@ public class MoviesListActivity extends AppCompatActivity {
         setContentView(R.layout.activity_movies_list);
         mMoviesListRv = (RecyclerView) findViewById(R.id.movies_list_rv);
         mMoviesListRv.setVisibility(View.GONE);
-        final Call<MoviesResult> moviesList =  new RetroManager().getRetrofit().create(MovieService.class)
-                .getPopularMovies(RetroManager.API_KEY);
-
-        moviesList.enqueue(new Callback<MoviesResult>() {
+        gridLayoutManager = new GridLayoutManager(MoviesListActivity.this,2);
+        mMoviesListRv.setLayoutManager(gridLayoutManager);
+        mMoviesListRv.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
-            public void onResponse(Call<MoviesResult> call, Response<MoviesResult> response) {
-                mMoviesListRv.setVisibility(View.VISIBLE);
-                mMoviesListRv.setLayoutManager(new GridLayoutManager(MoviesListActivity.this,2));
-                MoviesResult mr = response.body();
-                mMoviesList = (ArrayList<Movie>) mr.getResults();
-                mMoviesListRv.setAdapter(new MoviesListAdapter(MoviesListActivity.this,
-                        mMoviesList, new MoviesListAdapter.OnItemclickListener() {
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                int visibleThreshold = 5;
+                int totalItemCount = gridLayoutManager.getItemCount();
+                int lastVisibleItem = gridLayoutManager.findLastVisibleItemPosition();
+
+                if (!isLoading && totalItemCount <= (lastVisibleItem + visibleThreshold)) {
+                    if (onLoadMoreListener != null) {
+                        pageNumber++;
+                        onLoadMoreListener.onLoadMore(pageNumber);
+                    }
+                    isLoading = true;
+                }
+            }
+        });
+        moviesListAdapter=new MoviesListAdapter(MoviesListActivity.this,
+                new MoviesListAdapter.OnItemclickListener() {
                     @Override
                     public void onItemClick(int movieId) {
-
                         Intent i = new Intent(MoviesListActivity.this,MovieDetailActivity.class);
                         i.putExtra("movie_id",movieId);
                         startActivity(i);
                     }
-                }));
+                });
+        mMoviesListRv.setAdapter(moviesListAdapter);
+        getMoviesData(pageNumber);
+    }
+
+    OnLoadMoreListener onLoadMoreListener = new OnLoadMoreListener() {
+        @Override
+        public void onLoadMore(int pageNumber) {
+           new Handler().post(new Runnable() {
+                @Override
+                public void run() {
+                    if (mMoviesList.size() > 0) {
+                        mMoviesList.add(null);
+                        moviesListAdapter.notifyItemInserted(mMoviesList.size() - 1);
+                    }
+                }
+            });
+           getMoviesData(pageNumber);
+        }
+    };
+
+    public void getMoviesData(int page){
+        final Call<MoviesResult> moviesList =  new RetroManager().getRetrofit().create(MovieService.class)
+                .getPopularMovies(RetroManager.API_KEY,page);
+        moviesList.enqueue(new Callback<MoviesResult>() {
+            @Override
+            public void onResponse(Call<MoviesResult> call, Response<MoviesResult> response) {
+                mMoviesListRv.setVisibility(View.VISIBLE);
+                MoviesResult mr = response.body();
+
+                if (mMoviesList.size() > 0) {
+                    mMoviesList.remove(mMoviesList.size() - 1);
+                    moviesListAdapter.notifyItemRemoved(mMoviesList.size());
+                }
+                mMoviesList.addAll(mr.getResults());
+                moviesListAdapter.setmMoviesList(mMoviesList);
+                moviesListAdapter.notifyDataSetChanged();
+                isLoading = false;
             }
 
             @Override
@@ -58,8 +112,37 @@ public class MoviesListActivity extends AppCompatActivity {
 
             }
         });
+    }
 
+    private boolean isChecked = false;
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu, menu);
+        return true;
+    }
 
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem checkable = menu.findItem(R.id.sort_toggle);
+        checkable.setChecked(isChecked);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.sort_toggle:
+                isChecked = !item.isChecked();
+                if(isChecked){
+                    item.setTitle(getString(R.string.sort_by_top_rated));
+
+                }
+                item.setChecked(isChecked);
+                return true;
+            default:
+                return false;
+        }
     }
 }

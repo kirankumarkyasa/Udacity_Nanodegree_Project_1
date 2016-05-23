@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Popular Movies 1</string>
+    <string name="sort_by_popular">sort by popular movies</string>
+    <string name="sort_by_top_rated">sort by High Rated</string>
+    <string name="popular_movies_title">Popular Movies</string>
+    <string name="top_rated_title">top Rated Movies</string>
 </resources>
