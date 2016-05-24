@@ -59,7 +59,11 @@ public class MoviesListActivity extends AppCompatActivity {
                 }
             }
         });
-
+        if(isPopular){
+            getSupportActionBar().setTitle(R.string.popular_movies_title);
+        } else {
+            getSupportActionBar().setTitle(R.string.top_rated_title);
+        }
         moviesListAdapter=new MoviesListAdapter(MoviesListActivity.this,
                 new MoviesListAdapter.OnItemclickListener() {
                     @Override
@@ -137,7 +141,6 @@ public class MoviesListActivity extends AppCompatActivity {
                     item.setTitle(getString(R.string.sort_by_top_rated));
                     getSupportActionBar().setTitle(R.string.top_rated_title);
                     isPopular = false;
-
                 } else {
                     item.setTitle(getString(R.string.sort_by_popular));
                     getSupportActionBar().setTitle(R.string.popular_movies_title);

@@ -32,7 +32,7 @@ public class MovieDetailActivity extends AppCompatActivity{
 
         final TextView titleTv,plotTv,ratingTv,releaseDateTv;
         final ImageView posterIv;
-
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         titleTv = (TextView) findViewById(R.id.original_title_tv);
         plotTv = (TextView) findViewById(R.id.plot_tv);
         ratingTv = (TextView) findViewById(R.id.rating_tv);
@@ -50,7 +50,7 @@ public class MovieDetailActivity extends AppCompatActivity{
                 plotTv.setText(mMovieDetails.getOverview());
                 ratingTv.setText(mMovieDetails.getVoteAverage()+"");
                 releaseDateTv.setText(mMovieDetails.getReleaseDate());
-                final String image_base_url = "http://image.tmdb.org/t/p/w185"+mMovieDetails.getPosterPath();
+                final String image_base_url = "http://image.tmdb.org/t/p/w342"+mMovieDetails.getPosterPath();
                 Picasso.with(getApplicationContext()).load(image_base_url).into(posterIv);
             }
 
@@ -59,5 +59,20 @@ public class MovieDetailActivity extends AppCompatActivity{
 
             }
         });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.home:
+                onBackPressed();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
     }
 }

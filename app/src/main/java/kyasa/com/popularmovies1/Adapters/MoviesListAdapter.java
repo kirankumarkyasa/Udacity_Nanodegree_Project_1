@@ -70,7 +70,7 @@ public class MoviesListAdapter extends RecyclerView.Adapter<MoviesListAdapter.Mo
 
         public void bind(final Movie item, final OnItemclickListener listener) {
             if(item != null){
-                final String image_base_url = "http://image.tmdb.org/t/p/w185"+item.getPosterPath();
+                final String image_base_url = "http://image.tmdb.org/t/p/w342"+item.getPosterPath();
                 movie_title_tv.setText(item.getTitle());
                 Picasso.with(mContext).
                         load(image_base_url)
