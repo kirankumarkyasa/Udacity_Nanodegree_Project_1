@@ -1,5 +1,6 @@
 package kyasa.com.popularmovies1;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
@@ -10,6 +11,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -18,6 +21,7 @@ import kyasa.com.popularmovies1.Adapters.MoviesListAdapter;
 import kyasa.com.popularmovies1.Interface.OnLoadMoreListener;
 import kyasa.com.popularmovies1.Model.Movie;
 import kyasa.com.popularmovies1.Model.MoviesResult;
+import kyasa.com.popularmovies1.Utils.Utils;
 import kyasa.com.popularmovies1.WebServices.MovieService;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -32,14 +36,17 @@ public class MoviesListActivity extends AppCompatActivity {
     private int pageNumber=1;
     private GridLayoutManager gridLayoutManager;
     private boolean isPopular = true;
+    private Context mContext;
+    private TextView mNoInternetTv;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movies_list);
-
+        mContext = MoviesListActivity.this;
         getSupportActionBar().setTitle(R.string.popular_movies_title);
         mMoviesListRv = (RecyclerView) findViewById(R.id.movies_list_rv);
         mMoviesListRv.setVisibility(View.GONE);
+        mNoInternetTv = (TextView) findViewById(R.id.no_internet_tv);
         gridLayoutManager = new GridLayoutManager(MoviesListActivity.this,2);
         mMoviesListRv.setLayoutManager(gridLayoutManager);
         mMoviesListRv.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -61,6 +68,7 @@ public class MoviesListActivity extends AppCompatActivity {
         });
         if(isPopular){
             getSupportActionBar().setTitle(R.string.popular_movies_title);
+
         } else {
             getSupportActionBar().setTitle(R.string.top_rated_title);
         }
@@ -74,7 +82,13 @@ public class MoviesListActivity extends AppCompatActivity {
                     }
                 });
         mMoviesListRv.setAdapter(moviesListAdapter);
-        getMoviesData(pageNumber);
+        if(Utils.isNetworkAvailable(MoviesListActivity.this)){
+            getMoviesData(pageNumber);
+        } else {
+            Toast.makeText(mContext,"No Internet Connectivity",Toast.LENGTH_SHORT).show();
+            mMoviesListRv.setVisibility(View.GONE);
+            mNoInternetTv.setVisibility(View.VISIBLE);
+        }
     }
 
     OnLoadMoreListener onLoadMoreListener = new OnLoadMoreListener() {
@@ -89,11 +103,20 @@ public class MoviesListActivity extends AppCompatActivity {
                     }
                 }
             });
-           getMoviesData(pageNumber);
+            if(Utils.isNetworkAvailable(MoviesListActivity.this)){
+                getMoviesData(pageNumber);
+            } else {
+                Toast.makeText(mContext,"No Internet Connectivity",Toast.LENGTH_SHORT).show();
+                mMoviesListRv.setVisibility(View.GONE);
+                mNoInternetTv.setVisibility(View.VISIBLE);
+            }
+
         }
     };
 
     public void getMoviesData(int page) {
+        mNoInternetTv.setVisibility(View.GONE);
+        mMoviesListRv.setVisibility(View.VISIBLE);
         String sort= "popular";
         if(isPopular) {
             sort= "popular";
@@ -102,6 +125,7 @@ public class MoviesListActivity extends AppCompatActivity {
         }
         final Call<MoviesResult> moviesList =  new RetroManager().getRetrofit().create(MovieService.class)
                 .getMovies(sort,RetroManager.API_KEY,page);
+        Utils.showProgressDialog(this);
         moviesList.enqueue(new Callback<MoviesResult>() {
             @Override
             public void onResponse(Call<MoviesResult> call, Response<MoviesResult> response) {
@@ -115,11 +139,13 @@ public class MoviesListActivity extends AppCompatActivity {
                 moviesListAdapter.setmMoviesList(mMoviesList);
                 moviesListAdapter.notifyDataSetChanged();
                 isLoading = false;
+                Utils.disMissProgressDialog();
             }
 
             @Override
             public void onFailure(Call<MoviesResult> call, Throwable t) {
-
+                mMoviesListRv.setVisibility(View.GONE);
+                mNoInternetTv.setVisibility(View.VISIBLE);
             }
         });
     }
@@ -137,17 +163,23 @@ public class MoviesListActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.sort_toggle:
-                if(isPopular) {
-                    item.setTitle(getString(R.string.sort_by_top_rated));
-                    getSupportActionBar().setTitle(R.string.top_rated_title);
-                    isPopular = false;
+                if(Utils.isNetworkAvailable(MoviesListActivity.this)){
+                    if(isPopular) {
+                        item.setTitle(getString(R.string.sort_by_popular));
+                        getSupportActionBar().setTitle(R.string.top_rated_title);
+                        isPopular = false;
+                    } else {
+                        item.setTitle(getString(R.string.sort_by_top_rated));
+                        getSupportActionBar().setTitle(R.string.popular_movies_title);
+                        isPopular = true;
+                    }
+                    getMoviesData(1);
+                    mMoviesList.clear();
                 } else {
-                    item.setTitle(getString(R.string.sort_by_popular));
-                    getSupportActionBar().setTitle(R.string.popular_movies_title);
-                    isPopular = true;
+                    Toast.makeText(mContext,"No Internet Connectivity",Toast.LENGTH_SHORT).show();
+                    mMoviesListRv.setVisibility(View.GONE);
+                    mNoInternetTv.setVisibility(View.VISIBLE);
                 }
-                getMoviesData(1);
-                mMoviesList.clear();
                 return true;
             default:
                 return false;
